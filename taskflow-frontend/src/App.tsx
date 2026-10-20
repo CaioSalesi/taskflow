@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import LandingPage from './pages/LandingPage'
 import AuthPlaceholderPage from './pages/AuthPlaceholderPage'
+import RegisterPage from './pages/RegisterPage'
 import './App.css'
 
 function App() {
@@ -17,15 +18,7 @@ function App() {
             />
           }
         />
-        <Route
-          path="/register"
-          element={
-            <AuthPlaceholderPage
-              title="Create your account"
-              description="The registration page is coming soon. You'll create your TaskFlow account from here."
-            />
-          }
-        />
+        <Route path="/register" element={<RegisterPage />} />
       </Routes>
     </BrowserRouter>
   )
