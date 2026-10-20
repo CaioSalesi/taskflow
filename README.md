@@ -10,6 +10,28 @@ Prerequisites:
 - [.NET SDK](https://dotnet.microsoft.com/download) 10 — for the API
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) — runs the PostgreSQL database
 
+### Option A: run everything in Docker
+
+With Docker Desktop open, run from the repo root:
+
+```bash
+docker compose up
+```
+
+That starts three containers: PostgreSQL, the API (`dotnet watch run`, so it hot-reloads on code changes) and the frontend (Vite dev server, also hot-reloading). The first start is slow — it downloads the .NET SDK and Node images, restores NuGet packages and runs `npm install` — but later starts reuse cached volumes and are quick.
+
+Once it's up: frontend at http://localhost:5173, API at http://localhost:5171, database on host port 5433. Stop everything with `Ctrl+C` (or `docker compose down`).
+
+Only Docker is required for this option; Node and the .NET SDK are still needed if you want to run tests, linting or EF migrations on the host.
+
+### Option B: run the frontend and API on the host
+
+Start just the database in Docker, then run the two dev servers yourself (sections below):
+
+```bash
+docker compose up -d postgres
+```
+
 ### Frontend
 
 From the repo root:
@@ -30,15 +52,14 @@ Open the URL shown in the terminal (usually http://localhost:5173) to see the la
 The API stores its data in PostgreSQL, which runs inside a Docker container — you don't need to install PostgreSQL itself. With Docker Desktop open, run from the repo root:
 
 ```bash
-docker compose up -d
+docker compose up -d postgres
 ```
 
 That downloads the Postgres image the first time and starts it in the background on port 5433 (5433 instead of the default 5432 to avoid clashing with any PostgreSQL already installed on the machine). Data survives restarts in a Docker volume named `postgres-data`. Useful commands:
 
 ```bash
-docker compose stop        # stop the database (data is kept)
-docker compose up -d       # start it again
-docker compose down -v     # stop AND wipe all data (fresh start)
+docker compose stop        # stop the containers (data is kept)
+docker compose down -v     # stop AND wipe all data/caches (fresh start)
 
 # Open a SQL prompt inside the database (\q to exit)
 docker exec -it taskflow-postgres psql -U taskflow -d taskflow
@@ -106,5 +127,5 @@ taskflow/
 │   ├── Infrastructure/    # Global exception handling
 │   ├── Data/              # EF Core DbContext
 │   └── Migrations/        # EF Core database migrations
-└── docker-compose.yml     # Local infrastructure (PostgreSQL)
+└── docker-compose.yml     # Local dev environment (PostgreSQL, API, frontend)
 ```
