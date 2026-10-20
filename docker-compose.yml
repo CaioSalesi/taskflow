@@ -11,6 +11,62 @@ services:
       - '5433:5432'
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U taskflow -d taskflow']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    image: mcr.microsoft.com/dotnet/sdk:10.0
+    container_name: taskflow-api
+    working_dir: /app
+    command: dotnet watch run --no-launch-profile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      # Bind on all interfaces so the port mapping works; launchSettings.json
+      # would bind localhost only, hence --no-launch-profile above.
+      ASPNETCORE_URLS: http://+:5171
+      # Inside the Compose network the database is reached by service name,
+      # overriding the localhost:5433 string in appsettings.Development.json.
+      ConnectionStrings__Default: Host=postgres;Port=5432;Database=taskflow;Username=taskflow;Password=taskflow
+      # Windows bind mounts don't deliver file-change events to Linux containers.
+      DOTNET_USE_POLLING_FILE_WATCHER: 'true'
+    ports:
+      - '5171:5171'
+    volumes:
+      - ./TaskFlow.Api:/app
+      # Keep Linux build output and the NuGet cache out of the Windows checkout
+      # so container builds don't fight with builds run on the host.
+      - api-bin:/app/bin
+      - api-obj:/app/obj
+      - nuget-cache:/root/.nuget/packages
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    image: node:22
+    container_name: taskflow-frontend
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -- --host"
+    environment:
+      # Proxy /api to the api container instead of localhost (see vite.config.ts).
+      DEV_PROXY_TARGET: http://api:5171
+      # Same polling story as the API: Windows bind mounts emit no events.
+      DEV_USE_POLLING: 'true'
+    ports:
+      - '5173:5173'
+    volumes:
+      - ./taskflow-frontend:/app
+      # Linux-native node_modules, separate from any install done on the host.
+      - frontend-node-modules:/app/node_modules
+    depends_on:
+      - api
 
 volumes:
   postgres-data:
+  api-bin:
+  api-obj:
+  nuget-cache:
+  frontend-node-modules:
