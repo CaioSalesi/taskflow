@@ -1,0 +1,5 @@
+bin/
+obj/
+
+# Local JSON database
+Data/
