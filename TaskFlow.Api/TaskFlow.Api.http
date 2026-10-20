@@ -1,0 +1,33 @@
+@TaskFlow.Api_HostAddress = http://localhost:5171
+
+### Register a new user — 201 Created
+POST {{TaskFlow.Api_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "password": "ExamplePassword123!"
+}
+
+### Duplicate email — 409 Conflict
+POST {{TaskFlow.Api_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "password": "ExamplePassword123!"
+}
+
+### Invalid input — 400 Bad Request
+POST {{TaskFlow.Api_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "",
+  "email": "not-an-email",
+  "password": "123"
+}
+
+###
