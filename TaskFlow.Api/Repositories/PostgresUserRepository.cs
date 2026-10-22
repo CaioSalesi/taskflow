@@ -25,4 +25,9 @@ public class PostgresUserRepository(AppDbContext dbContext) : IUserRepository
             return false;
         }
     }
+
+    public Task<User?> FindByEmailAsync(string email, CancellationToken cancellationToken = default)
+    {
+        return dbContext.Users.FirstOrDefaultAsync(user => user.Email == email, cancellationToken);
+    }
 }

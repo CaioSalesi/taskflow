@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using TaskFlow.Api.Data;
 using TaskFlow.Api.Infrastructure;
@@ -14,6 +15,38 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddScoped<IUserRepository, PostgresUserRepository>();
 builder.Services.AddSingleton<IPasswordHasher, Pbkdf2PasswordHasher>();
+
+builder.Services
+    .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.Cookie.Name = "taskflow.session";
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+        // SameAsRequest because local Docker serves plain HTTP; becomes Secure
+        // automatically once the app is served over HTTPS.
+        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+        // Sessions last a fixed week from login, then expire and the user is
+        // logged out automatically. No sliding renewal — a future per-user
+        // setting will make this duration configurable.
+        options.ExpireTimeSpan = TimeSpan.FromDays(7);
+        options.SlidingExpiration = false;
+
+        // This is an API consumed by the SPA: return bare status codes instead
+        // of the cookie handler's default redirects to an MVC login page. The
+        // frontend router is responsible for sending users to /login on 401.
+        options.Events.OnRedirectToLogin = context =>
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return Task.CompletedTask;
+        };
+        options.Events.OnRedirectToAccessDenied = context =>
+        {
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            return Task.CompletedTask;
+        };
+    });
+builder.Services.AddAuthorization();
 
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
@@ -34,8 +67,12 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 
 app.Run();
+
+// Exposes the entry point to WebApplicationFactory in the test project.
+public partial class Program;

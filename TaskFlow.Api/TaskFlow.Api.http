@@ -30,4 +30,28 @@ Content-Type: application/json
   "password": "123"
 }
 
+### Log in — 200 OK, sets the taskflow.session cookie
+POST {{TaskFlow.Api_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "john@example.com",
+  "password": "ExamplePassword123!"
+}
+
+### Invalid credentials — 401 Unauthorized (same message for unknown email)
+POST {{TaskFlow.Api_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "john@example.com",
+  "password": "wrong-password"
+}
+
+### Current user — 200 OK with a session cookie, 401 without
+GET {{TaskFlow.Api_HostAddress}}/api/auth/me
+
+### Log out — 204 No Content, clears the session cookie
+POST {{TaskFlow.Api_HostAddress}}/api/auth/logout
+
 ###

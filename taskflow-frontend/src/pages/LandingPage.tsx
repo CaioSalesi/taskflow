@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import logo from '../assets/hero.png'
+import { useAuth } from '../auth/AuthContext'
+import UserMenu from '../components/UserMenu'
 import { fetchFeatures, type Feature } from '../data/features'
 import './LandingPage.css'
 
@@ -88,6 +90,7 @@ const BOARD_PREVIEW = [
 
 function LandingPage() {
   const [features, setFeatures] = useState<Feature[] | null>(null)
+  const { user, initializing } = useAuth()
 
   useEffect(() => {
     let cancelled = false
@@ -113,12 +116,22 @@ function LandingPage() {
           <a href="#how-it-works">How it works</a>
         </nav>
         <div className="header-actions">
-          <Link to="/login" className="btn btn-ghost">
-            Log in
-          </Link>
-          <Link to="/register" className="btn btn-primary">
-            Sign up
-          </Link>
+          {user ? (
+            <UserMenu />
+          ) : (
+            // Render nothing while the session check runs, so a logged-in
+            // user never sees the login/signup buttons flash.
+            !initializing && (
+              <>
+                <Link to="/login" className="btn btn-ghost">
+                  Log in
+                </Link>
+                <Link to="/register" className="btn btn-primary">
+                  Sign up
+                </Link>
+              </>
+            )
+          )}
         </div>
       </header>
 
@@ -136,12 +149,20 @@ function LandingPage() {
               all in one place.
             </p>
             <div className="hero-actions">
-              <Link to="/register" className="btn btn-primary btn-lg">
-                Get started — it's free
-              </Link>
-              <Link to="/login" className="btn btn-ghost btn-lg">
-                Log in
-              </Link>
+              {user ? (
+                <Link to="/dashboard" className="btn btn-primary btn-lg">
+                  Go to your dashboard
+                </Link>
+              ) : (
+                <>
+                  <Link to="/register" className="btn btn-primary btn-lg">
+                    Get started — it's free
+                  </Link>
+                  <Link to="/login" className="btn btn-ghost btn-lg">
+                    Log in
+                  </Link>
+                </>
+              )}
             </div>
           </div>
 
@@ -236,8 +257,14 @@ function LandingPage() {
         <nav aria-label="Footer">
           <a href="#features">Features</a>
           <a href="#how-it-works">How it works</a>
-          <Link to="/login">Log in</Link>
-          <Link to="/register">Sign up</Link>
+          {user ? (
+            <Link to="/dashboard">Dashboard</Link>
+          ) : (
+            <>
+              <Link to="/login">Log in</Link>
+              <Link to="/register">Sign up</Link>
+            </>
+          )}
         </nav>
         <p className="footer-copy">
           © {new Date().getFullYear()} TaskFlow. All rights reserved.

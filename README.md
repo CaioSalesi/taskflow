@@ -83,8 +83,21 @@ On startup (in development) the API automatically applies EF Core migrations, cr
 | Method | Route | Description |
 | --- | --- | --- |
 | `POST` | `/api/auth/register` | Register a new user. Body: `{ "name", "email", "password" }`. Returns `201` with the created user, `400` on validation errors, `409` if the email is already registered. |
+| `POST` | `/api/auth/login` | Log in. Body: `{ "email", "password" }`. Returns `200` with the user and sets an HttpOnly session cookie, `400` on validation errors, `401` on invalid credentials (one generic message — it never reveals whether the email exists). |
+| `POST` | `/api/auth/logout` | End the current session (clears the session cookie). Returns `204`. |
+| `GET` | `/api/auth/me` | Return the logged-in user. Requires authentication; returns `401` without a valid session. |
 
 Passwords are hashed with PBKDF2 before storage. Users are persisted to PostgreSQL via EF Core; duplicate emails are prevented by a unique index on the `users` table.
+
+Authentication uses ASP.NET Core cookie authentication: a successful login sets a persistent HttpOnly `taskflow.session` cookie that the browser sends automatically (the Vite dev server proxies `/api`, so frontend and API are same-origin in development). Sessions last a fixed 7 days from login — they survive closing the browser but are not extended by activity, so after a week the user is logged out automatically (a per-user setting for this duration is planned). An open tab notices the expiry without a reload: the auth context re-checks the session when the tab regains focus and every 5 minutes, and any authenticated request made through `authFetch` (`src/data/api.ts`) that returns `401` clears the login state, sending the user back to `/login`. Endpoints marked `[Authorize]` return `401` instead of redirecting; the frontend's `RequireAuth` wrapper sends unauthenticated visitors to `/login` and back to the page they wanted after logging in.
+
+#### Backend tests
+
+Integration tests for the API live in `TaskFlow.Api.Tests` (xUnit + `WebApplicationFactory`; they swap the PostgreSQL repository for an in-memory one, so no database is needed). Run from the repo root:
+
+```bash
+dotnet test
+```
 
 #### Changing the database schema
 
@@ -115,7 +128,8 @@ Run these inside `taskflow-frontend/`:
 taskflow/
 ├── taskflow-frontend/     # React + TypeScript + Vite frontend
 │   └── src/
-│       ├── pages/         # Route pages (landing, register, login placeholder) + tests
+│       ├── pages/         # Route pages (landing, register, login, dashboard) + tests
+│       ├── auth/          # Auth context, RequireAuth route guard + tests
 │       ├── data/          # API clients and data access
 │       └── test/          # Test setup
 ├── TaskFlow.Api/          # ASP.NET Core (.NET 10) backend
@@ -127,5 +141,6 @@ taskflow/
 │   ├── Infrastructure/    # Global exception handling
 │   ├── Data/              # EF Core DbContext
 │   └── Migrations/        # EF Core database migrations
+├── TaskFlow.Api.Tests/    # API integration tests (xUnit + WebApplicationFactory)
 └── docker-compose.yml     # Local dev environment (PostgreSQL, API, frontend)
 ```
