@@ -166,6 +166,30 @@ export async function logoutUser(): Promise<void> {
   }
 }
 
+export type SessionStatus = 'valid' | 'expired' | 'unknown'
+
+/**
+ * Re-checks whether the session is still valid. Returns 'expired' only when
+ * the server definitively rejects it (401/403) — network failures and server
+ * errors return 'unknown', so a transient blip never logs the user out.
+ */
+export async function checkSession(): Promise<SessionStatus> {
+  let response: Response
+  try {
+    response = await fetch('/api/auth/me')
+  } catch {
+    return 'unknown'
+  }
+
+  if (response.ok) {
+    return 'valid'
+  }
+  if (response.status === 401 || response.status === 403) {
+    return 'expired'
+  }
+  return 'unknown'
+}
+
 /**
  * Returns the currently logged-in user, or null when there is no valid
  * session (or the server cannot be reached).
