@@ -1,0 +1,35 @@
+.dashboard-page {
+  min-height: 100svh;
+  background: var(--bg-soft);
+}
+
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.dashboard-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 21px;
+  font-weight: 700;
+  color: var(--text-h);
+  text-decoration: none;
+}
+
+.dashboard-content {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 48px 24px;
+
+  h1 {
+    font-size: 28px;
+    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+  }
+}

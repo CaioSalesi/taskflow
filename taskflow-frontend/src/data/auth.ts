@@ -83,3 +83,103 @@ export async function registerUser(
     problem?.title ?? 'Something went wrong. Please try again.',
   )
 }
+
+/** The logged-in user, as returned by the login and current-user endpoints. */
+export interface AuthUser {
+  id: string
+  name: string
+  email: string
+}
+
+export interface LoginInput {
+  email: string
+  password: string
+}
+
+export type LoginFieldErrors = Partial<Record<'email' | 'password', string>>
+
+export class LoginError extends Error {
+  readonly fieldErrors: LoginFieldErrors
+
+  constructor(message: string, fieldErrors: LoginFieldErrors = {}) {
+    super(message)
+    this.name = 'LoginError'
+    this.fieldErrors = fieldErrors
+  }
+}
+
+function toLoginFieldErrors(errors: Record<string, string[]>): LoginFieldErrors {
+  const fieldErrors: LoginFieldErrors = {}
+  for (const [key, messages] of Object.entries(errors)) {
+    const field = key.toLowerCase()
+    if ((field === 'email' || field === 'password') && messages.length > 0) {
+      fieldErrors[field] = messages[0]
+    }
+  }
+  return fieldErrors
+}
+
+/**
+ * Logs a user in. On success the API sets an HttpOnly session cookie, which
+ * the browser sends automatically on subsequent same-origin requests.
+ */
+export async function loginUser(input: LoginInput): Promise<AuthUser> {
+  let response: Response
+  try {
+    response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(input),
+    })
+  } catch {
+    throw new LoginError(
+      'Could not reach the server. Please try again in a moment.',
+    )
+  }
+
+  if (response.ok) {
+    return (await response.json()) as AuthUser
+  }
+
+  const problem = (await response
+    .json()
+    .catch(() => null)) as ProblemDetails | null
+
+  if (problem?.errors) {
+    throw new LoginError(
+      problem.title ?? 'Please fix the highlighted fields.',
+      toLoginFieldErrors(problem.errors),
+    )
+  }
+
+  throw new LoginError(
+    problem?.title ?? 'Something went wrong. Please try again.',
+  )
+}
+
+/** Ends the current session. Never throws — worst case the cookie expires. */
+export async function logoutUser(): Promise<void> {
+  try {
+    await fetch('/api/auth/logout', { method: 'POST' })
+  } catch {
+    // Ignore network failures; the client clears its state regardless.
+  }
+}
+
+/**
+ * Returns the currently logged-in user, or null when there is no valid
+ * session (or the server cannot be reached).
+ */
+export async function fetchCurrentUser(): Promise<AuthUser | null> {
+  let response: Response
+  try {
+    response = await fetch('/api/auth/me')
+  } catch {
+    return null
+  }
+
+  if (!response.ok) {
+    return null
+  }
+  return (await response.json()) as AuthUser
+}
