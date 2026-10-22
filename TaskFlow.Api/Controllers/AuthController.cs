@@ -81,7 +81,10 @@ public class AuthController(IUserRepository userRepository, IPasswordHasher pass
 
         await HttpContext.SignInAsync(
             CookieAuthenticationDefaults.AuthenticationScheme,
-            new ClaimsPrincipal(identity));
+            new ClaimsPrincipal(identity),
+            // Persistent: the session survives closing the browser and lasts
+            // the full ExpireTimeSpan configured in Program.cs.
+            new AuthenticationProperties { IsPersistent = true });
 
         return Ok(new LoginResponse(user.Id, user.Name, user.Email));
     }

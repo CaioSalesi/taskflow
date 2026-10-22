@@ -33,7 +33,11 @@ public class AuthEndpointsTests(TaskFlowApiFactory factory) : IClassFixture<Task
         Assert.NotNull(body);
         Assert.Equal("Ada Lovelace", body.Name);
         Assert.Equal("ada.login@example.com", body.Email);
-        Assert.NotNull(SetCookieHeader(response));
+        var cookie = SetCookieHeader(response);
+        Assert.NotNull(cookie);
+        // Persistent cookie (has an expiry) rather than a browser-session one,
+        // so the login survives closing the browser.
+        Assert.Contains("expires=", cookie, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

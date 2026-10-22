@@ -39,6 +39,7 @@
       "TaskFlow.Api.Tests/1.0.0": {
         "dependencies": {
           "Microsoft.AspNetCore.Mvc.Testing": "10.0.13",
+          "Microsoft.Extensions.TimeProvider.Testing": "10.11.0",
           "Microsoft.NET.Test.Sdk": "17.14.1",
           "TaskFlow.Api": "1.0.0",
           "coverlet.collector": "6.0.4",
@@ -908,6 +909,17 @@
         },
         "compile": {
           "lib/net10.0/Microsoft.Extensions.Primitives.dll": {}
+        }
+      },
+      "Microsoft.Extensions.TimeProvider.Testing/10.11.0": {
+        "runtime": {
+          "lib/net10.0/Microsoft.Extensions.TimeProvider.Testing.dll": {
+            "assemblyVersion": "10.11.0.0",
+            "fileVersion": "10.1100.26.51307"
+          }
+        },
+        "compile": {
+          "lib/net10.0/Microsoft.Extensions.TimeProvider.Testing.dll": {}
         }
       },
       "Microsoft.NET.Test.Sdk/17.14.1": {
@@ -3265,6 +3277,13 @@
       "sha512": "sha512-ZjTwxzhiw2TMEzIbUDkMF0dfDB2I4NQgIfKD0ELu9/5Mk+SRGdKZcD0/lvBrRCAPo6KN2r0BW86MRancoyJkoA==",
       "path": "microsoft.extensions.primitives/10.0.13",
       "hashPath": "microsoft.extensions.primitives.10.0.13.nupkg.sha512"
+    },
+    "Microsoft.Extensions.TimeProvider.Testing/10.11.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-DTivKZ2Du0dJideTTa6vPj/eXKNRu+RxtjBX7NOOUXHBtHx1ehbE+lM+j3/5M3wU6BqzcZqEEyR4+FnPKs2rTA==",
+      "path": "microsoft.extensions.timeprovider.testing/10.11.0",
+      "hashPath": "microsoft.extensions.timeprovider.testing.10.11.0.nupkg.sha512"
     },
     "Microsoft.NET.Test.Sdk/17.14.1": {
       "type": "package",

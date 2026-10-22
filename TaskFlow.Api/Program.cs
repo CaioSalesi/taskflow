@@ -26,8 +26,11 @@ builder.Services
         // SameAsRequest because local Docker serves plain HTTP; becomes Secure
         // automatically once the app is served over HTTPS.
         options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+        // Sessions last a fixed week from login, then expire and the user is
+        // logged out automatically. No sliding renewal — a future per-user
+        // setting will make this duration configurable.
         options.ExpireTimeSpan = TimeSpan.FromDays(7);
-        options.SlidingExpiration = true;
+        options.SlidingExpiration = false;
 
         // This is an API consumed by the SPA: return bare status codes instead
         // of the cookie handler's default redirects to an MVC login page. The
